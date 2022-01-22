@@ -1,8 +1,8 @@
-const sprites = new Image();
-sprites.src = './sprites.png';
+const sprites = new Image()
+sprites.src = './sprites.png'
 
-const canvas = document.querySelector('canvas');
-const ctx = canvas.getContext('2d');
+const canvas = document.querySelector('canvas')
+const ctx = canvas.getContext('2d')
 
 
 // [Plano de Fundo]
@@ -14,7 +14,7 @@ const planoDeFundo = {
   x: 0,
   y: canvas.height - 204,
   draw() {
-    ctx.fillStyle = '#70c5ce';
+    ctx.fillStyle = '#70c5ce'
     ctx.fillRect(0,0, canvas.width, canvas.height)
 
     ctx.drawImage(
@@ -23,7 +23,7 @@ const planoDeFundo = {
       planoDeFundo.largura, planoDeFundo.altura,
       planoDeFundo.x, planoDeFundo.y,
       planoDeFundo.largura, planoDeFundo.altura,
-    );
+    )
 
     ctx.drawImage(
       sprites,
@@ -31,9 +31,9 @@ const planoDeFundo = {
       planoDeFundo.largura, planoDeFundo.altura,
       (planoDeFundo.x + planoDeFundo.largura), planoDeFundo.y,
       planoDeFundo.largura, planoDeFundo.altura,
-    );
+    )
   },
-};
+}
 
 // [Chao]
 const chao = {
@@ -50,7 +50,7 @@ const chao = {
       chao.largura, chao.altura,
       chao.x, chao.y,
       chao.largura, chao.altura,
-    );
+    )
 
     ctx.drawImage(
       sprites,
@@ -58,9 +58,9 @@ const chao = {
       chao.largura, chao.altura,
       (chao.x + chao.largura), chao.y,
       chao.largura, chao.altura,
-    );
+    )
   },
-};
+}
 
 const flappyBird = {
   spriteX: 0,
@@ -82,18 +82,76 @@ const flappyBird = {
       flappyBird.largura, flappyBird.altura, // Tamanho do recorte na sprite
       flappyBird.x, flappyBird.y,
       flappyBird.largura, flappyBird.altura,
-    );
+    )
+  }
+}
+
+const getReadyMessage = {
+	sX: 134,
+	sY: 0,
+	w: 174,
+	h: 152,
+  x: (canvas.width / 2) - 174 / 2,
+  y: 50,
+  draw() {
+    ctx.drawImage(
+      sprites,
+      getReadyMessage.sX, getReadyMessage.sY, // Sprite X, Sprite Y
+      getReadyMessage.w, getReadyMessage.h, // Tamanho do recorte na sprite
+      getReadyMessage.x, getReadyMessage.y,
+      getReadyMessage.w, getReadyMessage.h,
+    )
+  }
+}
+
+let activeScreen = {}
+function changeScreen(screen) {
+  activeScreen = screen
+}
+
+const screens =  {
+  START: {
+    draw() {
+      planoDeFundo.draw()
+      chao.draw()
+      flappyBird.draw()
+      getReadyMessage.draw()
+
+    },
+    action() {
+      changeScreen(screens.GAME)
+    },
+    update() {
+      
+    }
+  }
+}
+
+screens.GAME = {
+  draw() {
+    planoDeFundo.draw()
+    chao.draw()
+    flappyBird.draw()
+  },
+  update() {
+    flappyBird.updateSprite()
   }
 }
 
 function loop() {
-	flappyBird.updateSprite()
-  planoDeFundo.draw();
-  chao.draw();
-  flappyBird.draw();
+  activeScreen.draw()
+  activeScreen.update()
 
-
-  requestAnimationFrame(loop);
+  requestAnimationFrame(loop)
 }
 
-loop();
+window.addEventListener('keyup', function(e) {
+  if (e.key == ' ') {
+    if(activeScreen.action) {
+      activeScreen.action()
+    }
+  }
+})
+
+changeScreen(screens.START)
+loop()
