@@ -4,6 +4,10 @@ sprites.src = './sprites.png'
 const canvas = document.querySelector('canvas')
 const ctx = canvas.getContext('2d')
 
+const hitSound = new Audio()
+hitSound.src = './soundEffects/hit.wav'
+const jumpSound = new Audio()
+jumpSound.src = './soundEffects/pulo.wav'
 
 // [Plano de Fundo]
 const planoDeFundo = {
@@ -36,55 +40,94 @@ const planoDeFundo = {
 }
 
 // [Chao]
-const chao = {
-  spriteX: 0,
-  spriteY: 610,
-  largura: 224,
-  altura: 112,
-  x: 0,
-  y: canvas.height - 112,
-  draw() {
-    ctx.drawImage(
-      sprites,
-      chao.spriteX, chao.spriteY,
-      chao.largura, chao.altura,
-      chao.x, chao.y,
-      chao.largura, chao.altura,
-    )
 
-    ctx.drawImage(
-      sprites,
-      chao.spriteX, chao.spriteY,
-      chao.largura, chao.altura,
-      (chao.x + chao.largura), chao.y,
-      chao.largura, chao.altura,
-    )
-  },
-}
+function createGround() {
+  const chao = {
+    spriteX: 0,
+    spriteY: 610,
+    largura: 224,
+    altura: 112,
+    x: 0,
+    y: canvas.height - 112,
+    draw() {
+      ctx.drawImage(
+        sprites,
+        chao.spriteX, chao.spriteY,
+        chao.largura, chao.altura,
+        chao.x, chao.y,
+        chao.largura, chao.altura,
+      )
+  
+      ctx.drawImage(
+        sprites,
+        chao.spriteX, chao.spriteY,
+        chao.largura, chao.altura,
+        (chao.x + chao.largura), chao.y,
+        chao.largura, chao.altura,
+      )
+    },
+    update() {
+      const groundMovement = 1
+      const repeatGround = chao.largura / 2
+      const move = chao.x - groundMovement
 
-const flappyBird = {
-  spriteX: 0,
-  spriteY: 0,
-  largura: 33,
-  altura: 24,
-  x: 10,
-  y: 50,
-	gravidade: 0.25,
-	velocidade: 0,
-  updateSprite(){
-		flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade
-		flappyBird.y = flappyBird.y + flappyBird.velocidade
-  },
-  draw() {
-    ctx.drawImage(
-      sprites,
-      flappyBird.spriteX, flappyBird.spriteY, // Sprite X, Sprite Y
-      flappyBird.largura, flappyBird.altura, // Tamanho do recorte na sprite
-      flappyBird.x, flappyBird.y,
-      flappyBird.largura, flappyBird.altura,
-    )
+      chao.x = move % repeatGround
+    }
   }
+  return chao
 }
+
+
+function collision(flappyBird, chao) {
+  const flappyBirdY = flappyBird.y + flappyBird.altura
+  const chaoY = chao.y
+
+  if(flappyBirdY >= chaoY) {
+    return true
+  }
+  else return false
+}
+
+function createFlappy() {
+  const flappyBird = {
+    spriteX: 0,
+    spriteY: 0,
+    largura: 33,
+    altura: 24,
+    x: 10,
+    y: 50,
+    gravidade: 0.25,
+    velocidade: 0,
+    pulo: 4.6,
+    jump() {
+      flappyBird.velocidade = flappyBird.velocidade - flappyBird.pulo 
+    },
+    updateSprite() {
+      if(collision(flappyBird, globals.chao)) {
+        hitSound.play()
+
+        setTimeout(() => {
+          changeScreen(screens.START)
+        }, 200)
+        return
+      }
+      flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade
+      flappyBird.y = flappyBird.y + flappyBird.velocidade
+    },
+    draw() {
+      ctx.drawImage(
+        sprites,
+        flappyBird.spriteX, flappyBird.spriteY, // Sprite X, Sprite Y
+        flappyBird.largura, flappyBird.altura, // Tamanho do recorte na sprite
+        flappyBird.x, flappyBird.y,
+        flappyBird.largura, flappyBird.altura,
+      )
+    }
+  }
+  return flappyBird
+}
+
+
 
 const getReadyMessage = {
 	sX: 134,
@@ -104,17 +147,25 @@ const getReadyMessage = {
   }
 }
 
+const globals = {}
 let activeScreen = {}
 function changeScreen(screen) {
   activeScreen = screen
+  if(activeScreen.initialize) {
+    activeScreen.initialize()
+  }
 }
 
 const screens =  {
   START: {
+    initialize() {
+      globals.flappyBird = createFlappy()
+      globals.chao = createGround()
+    },
     draw() {
       planoDeFundo.draw()
-      chao.draw()
-      flappyBird.draw()
+      globals.chao.draw()
+      globals.flappyBird.draw()
       getReadyMessage.draw()
 
     },
@@ -122,7 +173,7 @@ const screens =  {
       changeScreen(screens.GAME)
     },
     update() {
-      
+      globals.chao.update()
     }
   }
 }
@@ -130,11 +181,14 @@ const screens =  {
 screens.GAME = {
   draw() {
     planoDeFundo.draw()
-    chao.draw()
-    flappyBird.draw()
+    globals.chao.draw()
+    globals.flappyBird.draw()
+  },
+  action() {
+    globals.flappyBird.jump()
   },
   update() {
-    flappyBird.updateSprite()
+    globals.flappyBird.updateSprite()
   }
 }
 
