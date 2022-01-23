@@ -1,7 +1,6 @@
 const sprites = new Image()
 sprites.src = './sprites.png'
 
-sessionStorage.setItem("best", 0)
 let frames = 0
 const canvas = document.querySelector('canvas')
 const ctx = canvas.getContext('2d')
@@ -109,6 +108,7 @@ function createPipes() {
 
         if(canos.collisionWithBird(par)) {
           hitSound.play()
+          console.log(globals.score.points)
           globals.score.saveScore()
           changeScreen(screens.GAMEOVER)
         }
@@ -270,8 +270,8 @@ const gameOverMessage = {
     ctx.lineWidth = 4
     ctx.strokeText(`${globals.score.points}`, canvas.width - 75, gameOverMessage.y + 100)
     ctx.fillText(`${globals.score.points}`, canvas.width - 75, gameOverMessage.y + 100)
-    ctx.strokeText(`${sessionStorage.getItem("best")}`, canvas.width - 75, gameOverMessage.y + 145)
-    ctx.fillText(`${sessionStorage.getItem("best")}`, canvas.width - 75, gameOverMessage.y + 145)
+    ctx.strokeText(`${localStorage.getItem("best")}`, canvas.width - 75, gameOverMessage.y + 145)
+    ctx.fillText(`${localStorage.getItem("best")}`, canvas.width - 75, gameOverMessage.y + 145)
   }
 }
 
@@ -295,8 +295,12 @@ function createScore() {
       }
     },
     saveScore() {
-      if(score.points > sessionStorage.getItem("best")) {
-        sessionStorage.setItem("best", score.points)
+      if(localStorage.getItem("best") == undefined) {
+        localStorage.setItem(score.points)
+      } 
+      else if(score.points > localStorage.getItem("best")) {
+        best = score.points
+        localStorage.setItem("best", best)
       }
     }
   } 
