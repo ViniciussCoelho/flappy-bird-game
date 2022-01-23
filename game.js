@@ -350,7 +350,7 @@ function createScore() {
     },
     saveScore() {
       if(localStorage.getItem("best") == undefined) {
-        localStorage.setItem(score.points)
+        localStorage.setItem("best", score.points)
       } 
       else if(score.points > localStorage.getItem("best")) {
         best = score.points
