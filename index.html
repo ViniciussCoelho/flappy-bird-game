@@ -8,19 +8,30 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"> 
 </head>
-<body>
+<body background="background.jpeg">
     <canvas id="game-canvas" width="320" height="480"></canvas>
+    <strong>Aperte espaço para jogar</strong>
     <style>
         body {
-          min-height: 100vh;
           display: flex;
           justify-content: center;
           align-items: center;
+          background-repeat: no-repeat;
+          background-size: cover;
         }
         canvas {
           border: 1px solid #000;
-          display: block;
-          margin: 0 auto;
+          margin: 0;
+          position: absolute;
+          top: 50%;
+          -ms-transform: translateY(-50%);
+          transform: translateY(-50%);
+        }
+        strong {
+          font: 25px 'Press Start 2P';
+          color: yellow;
+          -webkit-text-stroke: 2px #000;
+          text-stroke: 2px #000;
         }
     </style>
 

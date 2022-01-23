@@ -9,6 +9,8 @@ const hitSound = new Audio()
 hitSound.src = './soundEffects/hit.wav'
 const jumpSound = new Audio()
 jumpSound.src = './soundEffects/pulo.wav'
+const scoreSound = new Audio()
+scoreSound.src = './soundEffects/ponto.wav'
 
 // [Plano de Fundo]
 const planoDeFundo = {
@@ -108,7 +110,6 @@ function createPipes() {
 
         if(canos.collisionWithBird(par)) {
           hitSound.play()
-          console.log(globals.score.points)
           globals.score.saveScore()
           changeScreen(screens.GAMEOVER)
         }
@@ -182,6 +183,7 @@ function createFlappy() {
     velocidade: 0,
     pulo: 4.6,
     jump() {
+      jumpSound.play()
       flappyBird.velocidade = flappyBird.velocidade - flappyBird.pulo
     },
     updateSprite() {
@@ -226,6 +228,57 @@ function createFlappy() {
     }
   }
   return flappyBird
+}
+
+function createMedal() {
+  const medal = {
+    spriteX: 0,
+    spriteY: 78,
+    largura: 44,
+    altura: 44,
+    x: 73,
+    y: 137,
+    draw() {
+      const points = localStorage.getItem('best')
+      if(points < 100) {
+        ctx.drawImage(
+          sprites,
+          medal.spriteX, medal.spriteY,
+          medal.largura, medal.altura,
+          medal.x, medal.y,
+          medal.largura, medal.altura,
+        )
+      }
+      else if (points >= 100 && points < 500) {
+        ctx.drawImage(
+          sprites,
+          medal.spriteX + 48, medal.spriteY,
+          medal.largura, medal.altura,
+          medal.x, medal.y,
+          medal.largura, medal.altura,
+        )
+      }
+      else if (points >= 500 && points < 999) {
+        ctx.drawImage(
+          sprites,
+          medal.spriteX + 48, medal.spriteY + 46,
+          medal.largura, medal.altura,
+          medal.x, medal.y,
+          medal.largura, medal.altura,
+        )
+      }
+      else {
+        ctx.drawImage(
+          sprites,
+          medal.spriteX, medal.spriteY + 46,
+          medal.largura, medal.altura,
+          medal.x, medal.y,
+          medal.largura, medal.altura,
+        )
+      }
+    },
+  }
+  return medal
 }
 
 
@@ -291,6 +344,7 @@ function createScore() {
       const frameInterval = 60
       const intervalPassed = frames % frameInterval === 0
       if(intervalPassed) {
+        scoreSound.play()
         score.points += 1
       }
     },
@@ -362,8 +416,13 @@ screens.GAME = {
 }
 
 screens.GAMEOVER = {
+  initialize() {
+    globals.medal = createMedal()
+  },
   draw() {
     gameOverMessage.draw()
+    globals.medal.draw()
+    
   },
   update() {
     
@@ -387,12 +446,6 @@ window.addEventListener('keyup', function (e) {
       activeScreen.action()
     }
   }
-})
-
-window.addEventListener('click', function (e) {
-    if (activeScreen.action) {
-      activeScreen.action()
-    }
 })
 
 changeScreen(screens.START)
