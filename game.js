@@ -1,6 +1,7 @@
 const sprites = new Image()
 sprites.src = './sprites.png'
 
+sessionStorage.setItem("best", 0)
 let frames = 0
 const canvas = document.querySelector('canvas')
 const ctx = canvas.getContext('2d')
@@ -89,7 +90,7 @@ function createPipes() {
       const flappyBirdTop = globals.flappyBird.y
       const flappyBirdBottom = globals.flappyBird.y + globals.flappyBird.altura
 
-      if(globals.flappyBird.x >= p.x) {
+      if(globals.flappyBird.x + globals.flappyBird.largura >= p.x) {
         if(flappyBirdTop <= p.canoCeu.y || flappyBirdBottom >= p.canoChao.y) {
           return true
         }
@@ -107,7 +108,9 @@ function createPipes() {
         par.x = par.x - 2
 
         if(canos.collisionWithBird(par)) {
-          changeScreen(screens.START)
+          hitSound.play()
+          globals.score.saveScore()
+          changeScreen(screens.GAMEOVER)
         }
 
         if(par.x + canos.largura <= 0) {
@@ -175,7 +178,7 @@ function createFlappy() {
     altura: 24,
     x: 10,
     y: 50,
-    gravidade: 0.25,
+    gravidade: 0.20,
     velocidade: 0,
     pulo: 4.6,
     jump() {
@@ -184,10 +187,9 @@ function createFlappy() {
     updateSprite() {
       if (collision(flappyBird, globals.chao)) {
         hitSound.play()
+        globals.score.saveScore()
+        changeScreen(screens.GAMEOVER)
 
-        setTimeout(() => {
-          changeScreen(screens.START)
-        }, 200)
         return
       }
       flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade
@@ -246,6 +248,61 @@ const getReadyMessage = {
   }
 }
 
+const gameOverMessage = {
+  sX: 134,
+  sY: 153,
+  w: 226,
+  h: 200,
+  x: (canvas.width / 2) - 226 / 2,
+  y: 50,
+  draw() {
+    ctx.drawImage(
+      sprites,
+      gameOverMessage.sX, gameOverMessage.sY, // Sprite X, Sprite Y
+      gameOverMessage.w, gameOverMessage.h, // Tamanho do recorte na sprite
+      gameOverMessage.x, gameOverMessage.y,
+      gameOverMessage.w, gameOverMessage.h,
+    )
+    ctx.font = '20px "Press Start 2P"'
+    ctx.textAlign = 'right'
+    ctx.fillStyle = 'yellow'
+    ctx.strokeStyle = '#382f45'
+    ctx.lineWidth = 4
+    ctx.strokeText(`${globals.score.points}`, canvas.width - 75, gameOverMessage.y + 100)
+    ctx.fillText(`${globals.score.points}`, canvas.width - 75, gameOverMessage.y + 100)
+    ctx.strokeText(`${sessionStorage.getItem("best")}`, canvas.width - 75, gameOverMessage.y + 145)
+    ctx.fillText(`${sessionStorage.getItem("best")}`, canvas.width - 75, gameOverMessage.y + 145)
+  }
+}
+
+function createScore() {
+  const score = {
+    points: 0,
+    draw() {
+      ctx.font = '30px "Press Start 2P"'
+      ctx.textAlign = 'right'
+      ctx.fillStyle = 'yellow'
+      ctx.strokeStyle = '#382f45'
+      ctx.lineWidth = 4
+      ctx.strokeText(`${score.points}`, canvas.width - 10, 50)
+      ctx.fillText(`${score.points}`, canvas.width - 10, 50)
+    },
+    update() {
+      const frameInterval = 60
+      const intervalPassed = frames % frameInterval === 0
+      if(intervalPassed) {
+        score.points += 1
+      }
+    },
+    saveScore() {
+      if(score.points > sessionStorage.getItem("best")) {
+        sessionStorage.setItem("best", score.points)
+      }
+    }
+  } 
+  return score
+}
+
 const globals = {}
 let activeScreen = {}
 function changeScreen(screen) {
@@ -279,11 +336,15 @@ const screens = {
 }
 
 screens.GAME = {
+  initialize() {
+    globals.score = createScore()
+  },
   draw() {
     planoDeFundo.draw()
     globals.chao.draw()
     globals.canos.draw()
     globals.flappyBird.draw()
+    globals.score.draw()
   },
   action() {
     globals.flappyBird.jump()
@@ -292,6 +353,19 @@ screens.GAME = {
     globals.canos.update()
     globals.chao.update()
     globals.flappyBird.updateSprite()
+    globals.score.update()
+  }
+}
+
+screens.GAMEOVER = {
+  draw() {
+    gameOverMessage.draw()
+  },
+  update() {
+    
+  },
+  action() {
+    changeScreen(screens.START)
   }
 }
 
